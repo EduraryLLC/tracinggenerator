@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edurary Tracing Worksheet Generator PRO (Print-Ready)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Permanent+Marker&family=Sue+Ellen+Francisco&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        #controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #controls label {
+            font-weight: bold;
+            margin-top: 5px;
+            flex-basis: 100px; /* Give labels consistent width */
+        }
+        input[type="text"], select, textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        #textInput {
+            width: 300px;
+            flex-grow: 1;
+            min-height: 80px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #outputArea {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header Styles */
+        #worksheetHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 0.9em;
+        }
+        .headerField {
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+        .headerField span {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .headerField .line {
+            display: inline-block;
+            width: 150px;
+            border-bottom: 1px solid black;
+        }
+        #branding {
+            font-size: 0.8em;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Print Constraint Warning */
+        #printWarning {
+            color: #d9534f;
+            font-size: 0.9em;
+            margin-top: 10px;
+            flex-basis: 100%;
+            text-align: center;
+        }
+
+        /* Styles for printing */
+        @media print {
+            #controls, #copyButton {
+                display: none;
+            }
+            body {
+                margin: 0;
+                background-color: white;
+            }
+            #outputArea {
+                box-shadow: none;
+                padding: 20px;
+                margin: 0;
+            }
+            #worksheetHeader {
+                border-bottom: 1px solid black;
+            }
+            .headerField .line {
+                border-bottom: 1px solid black;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <h3>✏️ Tracing Generator Controls</h3>
+        
+        <label for="modeSelector">Content Type:</label>
+        <select id="modeSelector" onchange="switchMode()">
+            <option value="words">Words/Themes</option>
+            <option value="sentences">Sentences/Phrases</option>
+            <option value="subjects">School Subjects</option>
+        </select>
+        
+        <label for="themeSelector">Load Theme:</label>
+        <select id="themeSelector" onchange="loadTheme()">
+            </select>
+        
+        <label for="textInput">Custom Input (One item per line):</label>
+        <textarea id="textInput" placeholder="Enter one item per line" rows="5" cols="40" oninput="generateTracingText()">Edurary LLC</textarea>
+        
+        <label for="fontStyle">Font Style:</label>
+        <select id="fontStyle" onchange="generateTracingText()">
+            <option value="print">Standard Print</option>
+            <option value="precrs">Pre-Cursive/Manuscript</option>
+            <option value="cursive">Flowing Cursive</option>
+            <option value="cursive2">Elegant Cursive</option>
+        </select>
+
+        <label for="lineStyle">Worksheet Style:</label>
+        <select id="lineStyle" onchange="generateTracingText()">
+            <option value="simple">Simple Baseline (Older)</option>
+            <option value="manuscript">Manuscript Guidelines (Younger)</option>
+        </select>
+        
+        <label for="fontSize">Size:</label>
+        <select id="fontSize" onchange="generateTracingText()">
+            <option value="70">Large (70px)</option>
+            <option value="60" selected>Medium (60px)</option>
+            <option value="50">Small (50px)</option>
+        </select>
+        
+        <label for="tracingRepeats">Blank Lines:</label>
+        <select id="tracingRepeats" onchange="generateTracingText()">
+            <option value="0">0 Blank Lines</option>
+            <option value="1">1 Blank Line</option>
+            <option value="2">2 Blank Lines</option>
+            <option value="3">3 Blank Lines</option>
+        </select>
+        
+        <label for="textCase">Letter Case:</label>
+        <select id="textCase" onchange="generateTracingText()">
+            <option value="default">Keep Case</option>
+            <option value="uppercase">ALL CAPS</option>
+            <option value="lowercase">all lower</option>
+        </select>
+
+        <button onclick="generateTracingText()">Generate Worksheet</button>
+        <button id="printButton" onclick="window.print()">Print Page</button>
+        <button id="copyButton" onclick="copySVGCode()">Copy Worksheet HTML</button>
+
+        <p id="printWarning">⚠️ Note: Worksheet content is constrained to fit standard PDF/Print page width.</p>
+    </div>
+
+    <div id="outputArea">
+        
+        <div id="worksheetHeader">
+            <div class="headerField">
+                <span>Name:</span> <span class="line"></span>
+            </div>
+            <div class="headerField">
+                <span>Date:</span> <span class="line"></span>
+            </div>
+            <div class="headerField">
+                <span>Class:</span> <span class="line"></span>
+            </div>
+            <div id="branding">
+                Worksheet generated by **EDURARY**
+            </div>
+        </div>
+        <svg id="tracingSVG" width="100%" height="450" viewBox="0 0 850 450">
+            <text x="50" y="50" dominant-baseline="middle">Please enter text and press Generate Worksheet.</text>
+        </svg>
+    </div>
+
+    <script>
+        // Dictionary of themes.
+        const themes = {
+            words: {
+                custom: ["Edurary LLC", "Tracing Generator"], 
+                shapes: ["Circle", "Square", "Triangle", "Star", "Heart", "Oval"],
+                colors: ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"],
+                alphabet_upper: ["A B C D E", "F G H I J", "K L M N O", "P Q R S T", "U V W X Y Z"],
+                alphabet_lower: ["a b c d e", "f g h i j", "k l m n o", "p q r s t", "u v w x y z"],
+            },
+            sentences: {
+                custom: ["The quick brown fox jumps over the lazy dog."], 
+                greetings: ["Hello, how are you today?", "Thank you for the help.", "Have a wonderful day!"],
+                famous: ["The only way to do great work is to love what you do.", "Where there is love, there is life."],
+            },
+            subjects: {
+                math: ["Add", "Subtract", "Multiply", "Divide", "Number", "Equal"],
+                science: ["Sun", "Moon", "Earth", "Water", "Plant", "Animal"],
+                history: ["King", "Queen", "Soldier", "Map", "Event", "Timeline"],
+                reading: ["Story", "Book", "Read", "Write", "Learn", "Pencil"],
+            }
+        };
+
+        let currentMode = 'words';
+        
+        // SVG Layout Constants
+        const START_X = 50; 
+        // Increased START_Y to push the first line further down, ensuring it's never obscured by the header
+        const START_Y = 80; 
+        const FIXED_VIEWBOX_WIDTH = 850; // Fixed width for print compatibility
+        const BASELINE_ADJUSTMENT = 1.8; // Spacing multiplier for line height
+        const TEXT_Y_OFFSET = 0.3; // Multiplier to set text baseline offset
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateThemeOptions('words');
+            document.getElementById('fontSize').value = '60'; 
+            document.getElementById('textInput').value = themes.words.custom.join('\n');
+            generateTracingText();
+        });
+
+        function populateThemeOptions(mode) {
+            const selector = document.getElementById('themeSelector');
+            selector.innerHTML = ''; 
+            currentMode = mode; 
+
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = 'Custom';
+            selector.appendChild(customOption);
+
+            for (const key in themes[mode]) {
+                if (key !== 'custom') {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
+                    selector.appendChild(option);
+                }
+            }
+        }
+
+        function switchMode() {
+            const modeSelect = document.getElementById('modeSelector');
+            populateThemeOptions(modeSelect.value);
+            loadTheme();
+        }
+
+        function loadTheme() {
+            const selector = document.getElementById('themeSelector');
+            const themeKey = selector.value;
+            const textInput = document.getElementById('textInput');
+            
+            const contentArray = themes[currentMode][themeKey] || themes[currentMode]['custom'];
+            textInput.value = contentArray.join('\n');
+
+            generateTracingText();
+        }
+        
+        function drawLine(svg, yPosition, isTopOrMidLine = false) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute('x1', 0);
+            line.setAttribute('y1', yPosition);
+            line.setAttribute('x2', FIXED_VIEWBOX_WIDTH); // Use fixed width here
+            line.setAttribute('y2', yPosition);
+            
+            // Baseline is solid black, guide lines are light gray and dashed
+            const strokeColor = isTopOrMidLine ? '#ccc' : 'black';
+            const strokeDash = isTopOrMidLine ? '5,5' : 'none'; 
+            const strokeWidth = isTopOrMidLine ? '1' : '1.5';
+            
+            line.style.cssText = `
+                stroke: ${strokeColor};
+                stroke-width: ${strokeWidth};
+                stroke-dasharray: ${strokeDash};
+            `;
+            svg.appendChild(line);
+        }
+
+        function generateTracingText() {
+            let linesToTrace = document.getElementById('textInput').value
+                                .split('\n')
+                                .map(line => line.trim())
+                                .filter(line => line.length > 0);
+            
+            const fontStyle = document.getElementById('fontStyle').value;
+            const fontSize = parseFloat(document.getElementById('fontSize').value);
+            const lineStyle = document.getElementById('lineStyle').value;
+            const repeats = parseInt(document.getElementById('tracingRepeats').value);
+            const textCase = document.getElementById('textCase').value;
+            const svg = document.getElementById('tracingSVG');
+
+            // Dynamic Line Height calculation (vertical space between baselines)
+            const LINE_HEIGHT = fontSize * BASELINE_ADJUSTMENT; 
+            const TRACE_OFFSET = fontSize * TEXT_Y_OFFSET; // How far above the line the text sits
+            
+            // --- 1. Apply Case Setting ---
+            if (textCase === 'uppercase') {
+                linesToTrace = linesToTrace.map(line => line.toUpperCase());
+            } else if (textCase === 'lowercase') {
+                linesToTrace = linesToTrace.map(line => line.toLowerCase());
+            }
+            
+            // Clear previous content
+            svg.innerHTML = ''; 
+            
+            // --- 2. Determine Font Family ---
+            let fontFamily = '';
+            switch (fontStyle) {
+                case 'cursive': 
+                    fontFamily = "'Dancing Script', cursive"; break;
+                case 'cursive2':
+                    fontFamily = "'Sue Ellen Francisco', cursive"; break;
+                case 'precrs':
+                    fontFamily = "'Permanent Marker', cursive"; break;
+                case 'print':
+                default:
+                    fontFamily = "'Arial Black', sans-serif"; break;
+            }
+
+            let currentLineIndex = 0;
+            
+            // --- 3. Loop, Create Tracing Line(s) and Blank Practice Lines ---
+            linesToTrace.forEach((line) => {
+                
+                // --- A. Draw Tracing Text and Lines ---
+                const baselineY = START_Y + (currentLineIndex * LINE_HEIGHT);
+                
+                // 1. Draw the guidelines if manuscript style is selected
+                if (lineStyle === 'manuscript') {
+                    // Top line
+                    drawLine(svg, baselineY - LINE_HEIGHT + TRACE_OFFSET, true);
+                    // Mid line (halfway between top and bottom lines)
+                    drawLine(svg, baselineY - (LINE_HEIGHT / 2) + TRACE_OFFSET, true); 
+                }
+                
+                // 2. Draw the primary writing line (Baseline)
+                drawLine(svg, baselineY); 
+                
+                // 3. Draw the Tracing Text
+                const textY = baselineY - TRACE_OFFSET; 
+                const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                
+                textElement.textContent = line;
+                textElement.setAttribute('x', START_X);
+                textElement.setAttribute('y', textY); 
+                textElement.setAttribute('dominant-baseline', 'alphabetic'); 
+                
+                textElement.style.cssText = `
+                    font-family: ${fontFamily};
+                    font-size: ${fontSize}px;
+                    fill: none;
+                    stroke: #999;
+                    stroke-width: 2px;
+                    stroke-dasharray: 8 4;
+                `;
+                
+                svg.appendChild(textElement);
+                currentLineIndex++; // Move to the next index after the traced line
+
+                // --- B. Draw Blank Practice Lines (Repeats) ---
+                for (let r = 0; r < repeats; r++) {
+                    const repeatBaselineY = START_Y + (currentLineIndex * LINE_HEIGHT);
+                    
+                    // Draw the guidelines if manuscript style is selected
+                    if (lineStyle === 'manuscript') {
+                        drawLine(svg, repeatBaselineY - LINE_HEIGHT + TRACE_OFFSET, true);
+                        drawLine(svg, repeatBaselineY - (LINE_HEIGHT / 2) + TRACE_OFFSET, true); 
+                    }
+                    
+                    // Draw the primary writing line (Baseline)
+                    drawLine(svg, repeatBaselineY); 
+                    
+                    currentLineIndex++;
+                }
+            });
+            
+            // --- 4. Adjust SVG Height and ViewBox ---
+            // The width remains FIXED_VIEWBOX_WIDTH (850) for print compatibility.
+            const requiredHeight = (currentLineIndex * LINE_HEIGHT) + START_Y + 50; 
+            
+            svg.setAttribute('height', Math.max(450, requiredHeight));
+            svg.setAttribute('viewBox', `0 0 ${FIXED_VIEWBOX_WIDTH} ${Math.max(450, requiredHeight)}`);
+        }
+
+        function copySVGCode() {
+            const outputDiv = document.getElementById('outputArea');
+            const clone = outputDiv.cloneNode(true);
+
+            // Clean the clone before copying
+            const controls = clone.querySelector('#controls');
+            if (controls) controls.remove();
+            const printWarning = clone.querySelector('#printWarning');
+            if (printWarning) printWarning.remove();
+            
+            const header = clone.querySelector('#worksheetHeader').outerHTML;
+            const svgCode = clone.querySelector('#tracingSVG').outerHTML;
+            
+            const fullCode = header + svgCode;
+
+            navigator.clipboard.writeText(fullCode)
+                .then(() => {
+                    alert("Worksheet HTML/SVG copied to clipboard! (Includes Header)");
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert("Failed to copy code.");
+                });
+        }
+    </script>
+</body>
+</html>
